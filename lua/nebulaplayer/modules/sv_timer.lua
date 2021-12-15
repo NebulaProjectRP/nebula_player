@@ -18,7 +18,7 @@ function meta:savePlayTime()
     }, "steamid = " .. self:SteamID64())
 end
 
-function meta:initPlayTime()
+function meta:initPlayTime(data)
     self.playTime = {
         time = 0,
         week = 0,
@@ -26,34 +26,32 @@ function meta:initPlayTime()
         lastWeek = 0
     }
     self.startTime = CurTime()
-    NebulaDriver:MySQLSelect("playtime",
-        "steamid =" .. self:SteamID64()
-    , function(data)
-        if data and data[1] then
-            self.playTime = data[1]
 
-            if (os.date("%W") != self.playTime.lastWeek) then
-                self.playTime.lastWeek = os.date("%W")
-                self.playTime.week = 0
-            end
-        else
-            self.playTime = {
-                time = 0,
-                week = 0,
-                record = 0,
-                lastWeek = tonumber(os.date("%W")),
-                steamid = self:SteamID64()
-            }
-            NebulaDriver:MySQLInsert("playtime", self.playTime)
+    if data and data.time then
+        self.playTime = data
+
+        if (os.date("%W") != self.playTime.lastWeek) then
+            self.playTime.lastWeek = os.date("%W")
+            self.playTime.week = 0
         end
 
-        net.Start("NebulaRP.Playtime:Sync")
-        net.WriteUInt(self.playTime.time, 32)
-        net.WriteUInt(self.playTime.week, 32)
-        net.WriteUInt(self.playTime.record, 32)
-        net.Send(self)
-    end)
+        MsgC(Color(100, 255, 200),"[Player]", color_white, " Loaded playtime data for " .. self:Nick() .. ":" .. self:SteamID64() .. "\n")
+    else
+        self.playTime = {
+            time = 0,
+            week = 0,
+            record = 0,
+            lastWeek = tonumber(os.date("%W")),
+            steamid = self:SteamID64()
+        }
+        NebulaDriver:MySQLInsert("playtime", self.playTime)
+    end
 
+    net.Start("NebulaRP.Playtime:Sync")
+    net.WriteUInt(self.playTime.time, 32)
+    net.WriteUInt(self.playTime.week, 32)
+    net.WriteUInt(self.playTime.record, 32)
+    net.Send(self)
     timer.Create("Nebula.PlayTime.Update." .. self:SteamID64(), 60 * 5, 0, function()
         if self:IsValid() then
             self:savePlayTime()
@@ -69,10 +67,10 @@ hook.Add("DatabaseCreateTables", "Nebula.PlayTime", function(fun)
         lastWeek = "INT DEFAULT 0 NOT NULL",
         steamid = "VARCHAR(22)"
     }, "steamid")
-end)
 
-hook.Add("PlayerInitialSpawn", "Nebula.PlayTime", function(ply)
-    ply:initPlayTime()
+    NebulaDriver:MySQLHook("playtime", function(ply, data)
+        ply:initPlayTime(data)
+    end)
 end)
 
 hook.Add("PlayerDisconnected", "NebulaRP.PlayTime", function(ply)
