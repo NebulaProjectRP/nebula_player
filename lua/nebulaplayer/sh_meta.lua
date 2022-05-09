@@ -10,3 +10,7 @@ local vipgroups = {
 function meta:isVip()
     return vipgroups[self:GetUserGroup()] != nil
 end
+
+function meta:InArena()
+    return false
+end
