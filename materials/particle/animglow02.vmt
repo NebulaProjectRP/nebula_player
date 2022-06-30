@@ -1,0 +1,10 @@
+"SpriteCard"
+{
+"$baseTexture" "particle/animglow02"
+"$translucent" 1
+"$additive" 1
+//"$overbrightfactor" 1
+//"$ignorez" "1"
+	"$vertexalpha"	"1"
+	"$vertexcolor"	"1"
+}

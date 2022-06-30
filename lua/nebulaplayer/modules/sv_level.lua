@@ -7,6 +7,12 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
     }, "steamid")
 
     NebulaDriver:MySQLHook("level", function(ply, data)
+        data = data or {
+            level = 1,
+            experience = 0,
+            perks = "[]"
+        }
+
         ply.levelSystem = {
             level = data.level or 1,
             experience = data.experience or 0,
@@ -23,6 +29,6 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
         else
             MsgC(Color(100, 255, 200),"[Player]", color_white, " Loaded level data for " .. ply:Nick() .. ":" .. ply:SteamID64() .. "\n")
         end
-        
+
     end)
 end)

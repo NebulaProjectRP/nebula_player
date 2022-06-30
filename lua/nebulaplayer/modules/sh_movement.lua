@@ -11,27 +11,34 @@ hook.Add("Move", "NebulaRP.MoveDash", function(ply, mv)
             return
         end
 
-        if (dashObject:GetEase()) then
-            cycle = dashObject:GetEase()(cycle)
+        if (dashObj:GetEase()) then
+            cycle = dashObj:GetEase()(cycle)
         end
 
         local ori = mv:GetOrigin()
-        local target = ori + dasbObj:GetDirection() * dashObj.speed * FrameTime()
+        local target = LerpVector(cycle, dashObj.startPos, dashObj.startPos + dashObj:GetDirection() * dashObj.distance) //ori + dashObj:GetDirection() * dashObj.speed * FrameTime()
         local tr = util.TraceHull({
-            start = target + Vector(0, 0, 8),
-            endpos = target + Vector(0, 0, 16),
+            start = ori + Vector(0, 0, 2),
+            endpos = target + Vector(0, 0, 2),
             filter = ply,
             mins = Vector(-16, -16, -0),
             maxs = Vector(16, 16, 72),
             mask = MASK_PLAYERSOLID
         })
 
+        debugoverlay.Cross(tr.HitPos, 64, 5, SERVER and Color(61, 145, 255) or Color(255, 100, 0), true)
+
         if (IsValid(tr.Entity) and dashObj.OnCollide) then
             dashObj:OnCollide(tr.Entity)
         end
 
+        if tr.HitWorld then
+            ply.dashObject = nil
+            return
+        end
+
         mv:SetOrigin(tr.HitPos)
-        mv:SetVelocity(dashObj:GetDirection() * dashObj.speed)
+        mv:SetVelocity(dashObj:GetDirection() * dashObj.distance)
 
         return true
     end
@@ -45,6 +52,9 @@ local dashMeta = {
         ply.dashObject = s
         if SERVER then
             s:Network()
+        elseif (ply == LocalPlayer()) then
+            ply.dashObject.dashEnd = ply.dashObject.dashEnd + (LocalPlayer():Ping() / 1000)
+            ply.dashObject.time = (s.time or .5) + (LocalPlayer():Ping() / 1000)
         end
     end,
     GetOwner = function(s)
@@ -63,7 +73,7 @@ local dashMeta = {
         net.Start("NebulaRP.DashSync")
         net.WriteEntity(s:GetOwner())
         net.WriteFloat(s.distance)
-        net.WriteFloat(s:GetOwner().dashEnd)
+        net.WriteFloat(s.dashEnd)
         net.WriteNormal(s:GetDirection())
         net.SendPVS(s:GetOwner():GetPos())
     end
@@ -74,13 +84,16 @@ AccessorFunc(dashMeta, "direction", "Direction", FORCE_VECTOR)
 AccessorFunc(dashMeta, "ease", "Ease")
 
 function Dash(target)
-    local newDash = setmetatable({}, dashMeta)
+    local newDash = table.Copy(dashMeta)//setmetatable({}, dashMeta)
+    //PrintTable(newDash)
     newDash:Init(target)
+    return newDash
 end
 
 net.Receive("NebulaRP.DashSync", function(l)
     local owner = net.ReadEntity()
     if not IsValid(owner) then return end
+    if (owner.dashObject) then return end
 
     local distance = net.ReadFloat()
     local time = net.ReadFloat()
