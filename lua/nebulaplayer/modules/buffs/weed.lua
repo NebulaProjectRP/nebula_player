@@ -1,6 +1,7 @@
 local enabledWeed = false
+
 local buff = {
-    Name = "Weed"
+    Name = "Confused"
 }
 
 function buff:TakeDamage(ent, dmg, att, inf)
@@ -13,23 +14,25 @@ function buff:TakeDamage(ent, dmg, att, inf)
 end
 
 function buff:OnCreate(ply)
-    if CLIENT then
-        if not enabledWeed then
-            LocalPlayer():ScreenFade(SCREENFADE.IN, color_white, .3, 0)
-            enabledWeed = true
-        end
-
-        nebulaWeedCreate(true)
-    end
-
-    ply:SetNWBool("IsWeed", true)
     local timerName = ply:SteamID64() .. "_weed"
     timer.Remove(timerName)
+
+    if enabledWeed then
+        ply:SetNWBool("weed", true)
+        return
+    end
+
+    if CLIENT then
+        LocalPlayer():ScreenFade(SCREENFADE.IN, color_white, .3, 0)
+        enabledWeed = true
+        nebulaWeedCreate(true)
+    end
+    ply:SetNWBool("IsWeed", true)
     ply.DamageDealt = 0
 end
 
-function buff:OnRemove(ply)
-
+function buff:OnRemove(ply, recreate)
+    if recreate then return end
     if CLIENT then
         enabledWeed = false
         LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0), .3, 0)
@@ -53,9 +56,7 @@ function buff:OnRemove(ply)
 end
 
 NebulaBuffs:Register("weed", buff)
-
 if SERVER then return end
-
 local nextTurn = 0
 local lerpDir = 0
 local power = 0

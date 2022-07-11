@@ -197,7 +197,7 @@ function meta:addBuff(id, duration, causer)
     end
 
     if (buff.Stackable and (buff.Stacks or 0) < buff.MaxStack) then
-        buff.Stacks = buff.Stacks + 1
+        buff.Stacks = (buff.Stacks or 0) + 1
         buff:ApplyStats()
         buff.looper = self:LoopTimer(id .. "_looper", duration / 2, function()
             if (buff and (buff.RemoveWhole or (buff.Stacks or 0) > 0)) then
@@ -245,8 +245,15 @@ function meta:addBuff(id, duration, causer)
         NebulaBuffs.PlayerDrawHooks[self][id] = buff.PlayerDraw
     end
 
+    if CLIENT and self == LocalPlayer() then
+        if not IsValid(BuffPanel) then
+            BuffPanel = vgui.Create("nebulaui.buffs")
+        end
+        BuffPanel:AddBuff(id, duration)
+    end
+
     if (self.buffs[id] and buff.OnCreate) then
-        buff:Remove(self)
+        buff:Remove(self, true)
         timer.Simple(0, function()
             buff:OnCreate(self)
         end)
@@ -283,7 +290,7 @@ net.Receive("NebulaRP.SendBuff", function()
 
     if (duration > 0) then
         ply:addBuff(id, duration, causer)
-    elseif (ply.buffs[id]) then
+    elseif (ply.buffs and ply.buffs[id]) then
         ply.buffs[id]:Remove()
     end
 end)
