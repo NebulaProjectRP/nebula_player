@@ -31,4 +31,5 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
         end
 
     end)
+    
 end)

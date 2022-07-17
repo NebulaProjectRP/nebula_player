@@ -79,7 +79,6 @@ end
 
 NebulaBuffs:Register("poison", buff)
 
-
 buff = {
     Name = "Confetti"
 }
