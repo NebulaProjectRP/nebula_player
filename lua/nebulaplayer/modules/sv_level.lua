@@ -19,7 +19,7 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
             perks = util.JSONToTable(data.perks or "[]")
         }
 
-        if (!data.level) then
+        if not data.level then
             NebulaDriver:MySQLInsert("level", {
                 level = 1,
                 experience = 0,
@@ -27,9 +27,7 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
                 steamid = ply:SteamID64()
             })
         else
-            MsgC(Color(100, 255, 200),"[Player]", color_white, " Loaded level data for " .. ply:Nick() .. ":" .. ply:SteamID64() .. "\n")
+            MsgC(Color(100, 255, 200), "[Player]", color_white, " Loaded level data for " .. ply:Nick() .. ":" .. ply:SteamID64() .. "\n")
         end
-
     end)
-    
 end)

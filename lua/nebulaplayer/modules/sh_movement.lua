@@ -84,8 +84,7 @@ AccessorFunc(dashMeta, "direction", "Direction", FORCE_VECTOR)
 AccessorFunc(dashMeta, "ease", "Ease")
 
 function Dash(target)
-    local newDash = table.Copy(dashMeta)//setmetatable({}, dashMeta)
-    //PrintTable(newDash)
+    local newDash = table.Copy(dashMeta)
     newDash:Init(target)
     return newDash
 end
