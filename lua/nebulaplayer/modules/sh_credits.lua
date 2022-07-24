@@ -32,6 +32,7 @@ net.Receive("NebulaRP.Credits:Sync", function()
             config = util.JSONToTable(net.ReadString()),
         }
         waitPlayer(data)
+        return
     end
 
     LocalPlayer().storeData.credits = net.ReadUInt(32)
