@@ -1,11 +1,12 @@
 util.AddNetworkString("NebulaRP.Credits:Sync")
 util.AddNetworkString("NebulaRP.Credits:Transfer")
 util.AddNetworkString("NebulaRP.Credits:RequestLogs")
+util.AddNetworkString("NebulaRP.Credits:ChangeTitle")
 
 NebulaCredits = {}
-local ply = FindMetaTable("Player")
+local meta = FindMetaTable("Player")
 
-function ply:transferCredits(target, amount)
+function meta:transferCredits(target, amount)
     amount = math.ceil(amount)
     if (target == self) then
         DarkRP.notify(self, 1, 5, "Ha ha really funny")
@@ -45,7 +46,7 @@ function ply:transferCredits(target, amount)
     return true
 end
 
-function ply:syncCredits()
+function meta:syncCredits()
     local st = self.storeData
     net.Start("NebulaRP.Credits:Sync")
     net.WriteBool(true)
@@ -56,7 +57,7 @@ function ply:syncCredits()
     net.Send(self)
 end
 
-function ply:addCredits(x, source, ignore)
+function meta:addCredits(x, source, ignore)
     if not source then
         ErrorNoHalt("source #2 parameter not found, wanna gonna do about that!")
 
@@ -126,6 +127,7 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
         steamid = "VARCHAR(22) NOT NULL",
         credits = "INT NOT NULL DEFAULT 0",
         titles = "TEXT NOT NULL",
+        activetitle = "VARCHAR(32) DEFAULT 'user'",
         bag = "TEXT NOT NULL",
         config = "TEXT NOT NULL",
         joinDate = "INT(32) NOT NULL"
@@ -164,6 +166,7 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
         end
 
         pl.storeData = data
+        pl:SetNWString("Title", data.activetitle)
         pl:addCredits(data.credits, "First Spawn", true)
         pl:syncCredits()
     end)
@@ -204,4 +207,17 @@ net.Receive("NebulaRP.Credits:RequestLogs", function(l, pl)
         net.WriteUInt(obj.amount, 32)
     end
     net.Send(pl)
+end)
+
+net.Receive("NebulaRP.Credits:ChangeTitle", function(l, ply)
+    local title = net.ReadString()
+    if (ply.lastTitleChange or 0) > CurTime() then return end
+    ply.lastTitleChange = CurTime() + 2
+
+    if (title == ply:getTitle() or not ply:getTitles()[title]) then
+        ply:SetNWString("Title", title)
+        NebulaDriver:MySQLUpdate("credits", {
+            activetitle = title
+        }, "steamid = " .. ply:SteamID64())
+    end
 end)

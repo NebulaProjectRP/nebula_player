@@ -6,6 +6,14 @@ function meta:getCredits()
     return (self.storeData or {}).credits or 0
 end
 
+function meta:getTitles()
+    return (self.storeData or {}).titles or {}
+end
+
+function meta:getTitle()
+    return self:GetNWString("Title", nil)
+end
+
 function meta:canAffordCredits(am)
     return self:getCredits() >= am
 end
