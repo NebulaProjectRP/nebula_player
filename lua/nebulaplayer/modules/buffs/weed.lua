@@ -48,7 +48,7 @@ function buff:OnRemove(ply, recreate)
         local dmg = DamageInfo()
         dmg:SetAttacker(ply.weed_LA or game.GetWorld())
         dmg:SetDamage(ply.DamageDealt)
-        dmg:SetInflictor(ply.weed_LI or owner)
+        dmg:SetInflictor(ply)
         dmg:SetDamageType(DMG_CLUB)
         ply:TakeDamageInfo(dmg)
         ply.DamageDealt = 0
