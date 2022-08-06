@@ -2,6 +2,7 @@ util.AddNetworkString("NebulaRP.Credits:Sync")
 util.AddNetworkString("NebulaRP.Credits:Transfer")
 util.AddNetworkString("NebulaRP.Credits:RequestLogs")
 util.AddNetworkString("NebulaRP.Credits:ChangeTitle")
+util.AddNetworkString("NebulaRP.Credits:SendBP")
 
 NebulaCredits = {}
 local meta = FindMetaTable("Player")
@@ -170,6 +171,120 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
         pl:addCredits(data.credits, "First Spawn", true)
         pl:syncCredits()
     end)
+end)
+
+function meta:giveRank(rank)
+    if not table.HasValue(self.storeData.titles, rank) then
+        table.insert(self.storeData.titles, rank)
+        self.storeData.activetitle = rank
+        self:SetNWString("Title", rank)
+        NebulaDriver:MySQLUpdate("credits", {
+            titles = util.TableToJSON(self.storeData.titles),
+            activetitle = rank
+        }, "steamid = " .. self:SteamID64())
+    end
+end
+
+concommand.Add("neb_addrank", function(ply, cmd, args)
+    if (IsValid(ply)) then
+        return
+    end
+
+    local target = args[1]
+    local rank = args[2]
+
+    if IsValid(player.GetBySteamID(target)) then
+        player.GetBySteamID(target):giveRank(rank)
+    else
+        NebulaDriver:MySQLQuery("SELECT titles FROM credits WHERE steamid = " .. sid64, function(data)
+            if data and data[1] then
+                local titles = util.JSONToTable(data[1].titles)
+                table.insert(titles, rank)
+                NebulaDriver:MySQLUpdate("titles", {
+                    titles = util.TableToJSON(titles)
+                }, "steamid = " .. sid64, function()
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. bp .. " battlepass.")
+                end)
+            end
+        end)
+    end
+end)
+
+concommand.Add("neb_addcredits", function(ply, cmd, args)
+    if (IsValid(ply)) then
+        return
+    end
+
+    local target = args[1]
+    local amount = args[2]
+
+    if IsValid(player.GetBySteamID(target)) then
+        DarkRP.notify(player.GetBySteamID(target), 0, 4, "You have been given " .. amount .. " credits!")
+        player.GetBySteamID(target):addCredits(tonumber(amount), "Console/RCON/Donation")
+    else
+        local sid64 = util.SteamIDTo64(target)
+        NebulaDriver:MySQLUpdate("credits", {
+            credits = "credits + " .. tonumber(amount)
+        }, "steamid = " .. sid64, function()
+            NebulaDriver:MySQLQuery("SELECT credits FROM credits WHERE steamid = " .. sid64, function(data)
+                if data and data[1] then
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. amount .. " credits. New balance: " .. data[1].credits)
+                    NebulaCredits[sid64] = {
+                        Credits = data[1].credits,
+                        Logs = {}
+                    }
+                end
+            end)
+        end)
+    end
+end)
+
+function meta:addBattlepass(id)
+    if not self.storeData.bag then
+        self.storeData.bag = {}
+    end
+
+    self.storeData.bag[id] = {
+        level = 0,
+        premium = true,
+        claimed = 0
+    }
+
+    net.Start("NebulaRP.Credits:SendBP")
+    net.WriteString(id)
+    net.WriteBool(true)
+    net.WriteUInt(self.storeData.bag[id].level, 32)
+    net.WriteUInt(self.storeData.bag[id].claimed, 32)
+    net.Send(self)
+end
+
+concommand.Add("neb_givebp", function(ply, cmd, args)
+    if (IsValid(ply)) then
+        return
+    end
+
+    local target = args[1]
+    local bp = args[2]
+
+    if IsValid(player.GetBySteamID(target)) then
+        player.GetBySteamID(target):addBattlepass(bp)
+    else
+        NebulaDriver:MySQLQuery("SELECT bag FROM credits WHERE steamid = " .. sid64, function(data)
+            if data and data[1] then
+                local bag = util.JSONToTable(data[1].bag)
+                bag[bp] = {
+                    level = 0,
+                    premium = true,
+                    claimed = 0
+                }
+                NebulaDriver:MySQLUpdate("credits", {
+                    bag = util.TableToJSON(bag)
+                }, "steamid = " .. sid64, function()
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. bp .. " battlepass.")
+                end)
+            end
+        end)
+    end
 end)
 
 net.Receive("NebulaRP.Credits:Transfer", function(l, pl)
