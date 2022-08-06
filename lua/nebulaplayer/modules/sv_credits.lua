@@ -190,12 +190,13 @@ concommand.Add("neb_addrank", function(ply, cmd, args)
         return
     end
 
-    local target = args[1]
-    local rank = args[2]
+    local target = table.concat(args, "", 1, 5)
+    local rank = args[6]
 
     if IsValid(player.GetBySteamID(target)) then
         player.GetBySteamID(target):giveRank(rank)
     else
+        local sid64 = util.SteamIDTo64(target)
         NebulaDriver:MySQLQuery("SELECT titles FROM credits WHERE steamid = " .. sid64, function(data)
             if data and data[1] then
                 local titles = util.JSONToTable(data[1].titles)
@@ -203,7 +204,7 @@ concommand.Add("neb_addrank", function(ply, cmd, args)
                 NebulaDriver:MySQLUpdate("titles", {
                     titles = util.TableToJSON(titles)
                 }, "steamid = " .. sid64, function()
-                    MsgN("[NebulaRP] " .. target .. " has been given " .. bp .. " battlepass.")
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. rank .. " rank.")
                 end)
             end
         end)
@@ -215,8 +216,8 @@ concommand.Add("neb_addcredits", function(ply, cmd, args)
         return
     end
 
-    local target = args[1]
-    local amount = args[2]
+    local target = table.concat(args, "", 1, 5)
+    local amount = args[6]
 
     if IsValid(player.GetBySteamID(target)) then
         DarkRP.notify(player.GetBySteamID(target), 0, 4, "You have been given " .. amount .. " credits!")
@@ -263,12 +264,13 @@ concommand.Add("neb_givebp", function(ply, cmd, args)
         return
     end
 
-    local target = args[1]
-    local bp = args[2]
+    local target = table.concat(args, "", 1, 5)
+    local bp = args[6]
 
     if IsValid(player.GetBySteamID(target)) then
         player.GetBySteamID(target):addBattlepass(bp)
     else
+        local sid = util.SteamIDTo64(target)
         NebulaDriver:MySQLQuery("SELECT bag FROM credits WHERE steamid = " .. sid64, function(data)
             if data and data[1] then
                 local bag = util.JSONToTable(data[1].bag)
