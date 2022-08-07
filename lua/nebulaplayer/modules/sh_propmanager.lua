@@ -10,7 +10,11 @@ function meta:GetMaxProps()
 end
 
 hook.Add("PlayerSpawnProp", "NebulaRanks:PlayerSpawnProp", function(ply, model)
-    if ply:GetMaxProps() >= ply:GetCount("props") then
+    if ply:GetMaxProps() <= ply:GetCount("props") then
         return false
     end
+end)
+
+timer.Simple(10, function()
+    hook.Remove("PlayerSpawnProp", "SAM.Spawning.PlayerSpawnPropprops")
 end)
