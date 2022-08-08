@@ -141,7 +141,7 @@ end
 hook.Add("EntityTakeDamage", "NebulaBuffs.ETD", NebulaBuffs.TakeDamage)
 
 function NebulaBuffs.PlayerDraw(ply)
-    if (table.IsEmpty(NebulaBuffs.PlayerDrawHooks or {}) or table.IsEmpty(NebulaBuffs.PlayerDrawHooks[ply])) then
+    if (table.IsEmpty(NebulaBuffs.PlayerDrawHooks or {}) or table.IsEmpty(NebulaBuffs.PlayerDrawHooks[ply] or {})) then
         return
     end
     for id, buff in pairs(NebulaBuffs.PlayerDrawHooks[ply]) do
