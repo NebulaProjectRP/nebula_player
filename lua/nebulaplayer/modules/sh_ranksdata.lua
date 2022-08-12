@@ -35,7 +35,7 @@ NebulaRanks.Ranks["monke"] = {
 
 NebulaRanks.Ranks["kat"] = {
     Name = "Monke",
-    Props = 60,
+    Props = 200,
     Perm = RANK_HIGHEST,
     Color = Color( 252, 173, 255),
 }
