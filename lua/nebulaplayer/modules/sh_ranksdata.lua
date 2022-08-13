@@ -19,7 +19,7 @@ NebulaRanks.Ranks["default"] = {
 }
 
 NebulaRanks.Ranks["cosmic"] = {
-    Name = "Cosmic Born",
+    Name = "Cosmic",
     Props = 60,
     MaxStore = 8,
     Perm = RANK_MEDIUM,
