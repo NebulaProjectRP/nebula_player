@@ -280,6 +280,12 @@ function meta:addBuff(id, duration, causer)
     hook.Run("OnBuffAdded", self, id, buff)
 end
 
+function meta:removeBuff(id)
+    if (self.buffs[id]) then
+        self.buffs[id]:Remove()
+    end
+end
+
 net.Receive("NebulaRP.SendBuff", function()
     local id = net.ReadString()
     local duration = net.ReadFloat()
