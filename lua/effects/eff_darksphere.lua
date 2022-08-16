@@ -1,15 +1,15 @@
-
 ----------------
 -- Initialize --
 ----------------
 EFFECT.FillingTime = 9999
+
 function EFFECT:Init(data)
     self.StartPos = data:GetOrigin()
     local scale = data:GetMagnitude() or 1
     self.FillingTime = CurTime() + 4 * scale
     local dlight = DynamicLight(self.Entity:EntIndex())
 
-    if (dlight) then
+    if dlight then
         dlight.Pos = self.StartPos
         dlight.r = 255
         dlight.g = 255
@@ -39,13 +39,13 @@ end
 -- Effect Think --
 ------------------
 function EFFECT:Think()
-    if (self.FillingTime < CurTime()) then return false end
+    if self.FillingTime < CurTime() then return false end
+
     return true
 end
 
 -------------------
 -- Render Effect --
 -------------------
-
 function EFFECT:Render()
 end
