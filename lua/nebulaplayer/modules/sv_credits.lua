@@ -191,7 +191,9 @@ function meta:giveRank(rank)
         NebulaDriver:MySQLUpdate("premium", {
             titles = util.TableToJSON(self.storeData.titles),
             activetitle = rank
-        }, "steamid = " .. self:SteamID64())
+        }, "steamid = " .. self:SteamID64(), function()
+            MsgN("[NebulaRP] " .. self:SteamID64() .. " has been given " .. rank .. " rank.")
+        end)
     end
 end
 
@@ -207,10 +209,12 @@ concommand.Add("neb_addrank", function(ply, cmd, args)
         NebulaDriver:MySQLQuery("SELECT titles FROM premium WHERE steamid = " .. target, function(data)
             if data and data[1] then
                 local titles = util.JSONToTable(data[1].titles)
+
                 table.insert(titles, rank)
 
                 NebulaDriver:MySQLUpdate("premium", {
-                    titles = util.TableToJSON(titles)
+                    titles = util.TableToJSON(titles),
+                    activetitle = rank
                 }, "steamid = " .. target, function()
                     MsgN("[NebulaRP] " .. target .. " has been given " .. rank .. " rank.")
                 end)
