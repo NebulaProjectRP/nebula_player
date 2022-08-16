@@ -152,7 +152,7 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
         source = "VARCHAR(64) NOT NULL"
     }, "id")
 
-    NebulaDriver:MySQLHook("credits", function(pl, data)
+    NebulaDriver:MySQLHook("premium", function(pl, data)
         if not data then
             NebulaDriver:MySQLInsert("premium", {
                 steamid = pl:SteamID64(),
