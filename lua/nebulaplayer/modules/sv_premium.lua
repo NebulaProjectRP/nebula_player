@@ -70,8 +70,6 @@ function meta:syncCredits()
 end
 
 function meta:addCredits(x, source, ignore)
-    print(x .. "creeeedits")
-
     if not source then
         ErrorNoHalt("source #2 parameter not found, wanna gonna do about that!")
 
@@ -193,7 +191,6 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
 
         pl.storeData = data
         pl:SetNWString("Title", data.activetitle)
-        pl:addCredits(data.credits, "First Spawn", true)
         pl:syncCredits()
     end)
 end)
