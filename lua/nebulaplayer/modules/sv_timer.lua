@@ -4,11 +4,12 @@ local meta = FindMetaTable("Player")
 
 function meta:savePlayTime()
     local delta = math.floor(CurTime() - (self.startTime or 0))
+    local deltaRecord = math.floor(CurTime() - (self.startTimeReal or 0))
     self.playTime.time = self.playTime.time + delta
     self.playTime.week = self.playTime.week + delta
     self.startTime = CurTime()
 
-    if (delta > self.playTime.record) then
+    if (deltaRecord > self.playTime.record) then
         self.playTime.record = delta
     end
     NebulaDriver:MySQLUpdate("playtime", {
@@ -28,6 +29,7 @@ function meta:initPlayTime(data)
     }
 
     self.startTime = CurTime()
+    self.startTimeReal = CurTime()
 
     if data and data.time then
         self.playTime = data
