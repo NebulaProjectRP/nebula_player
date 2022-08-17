@@ -6,6 +6,7 @@ function meta:savePlayTime()
     local delta = math.floor(CurTime() - (self.startTime or 0))
     self.playTime.time = self.playTime.time + delta
     self.playTime.week = self.playTime.week + delta
+    self.startTime = CurTime()
 
     if (delta > self.playTime.record) then
         self.playTime.record = delta
