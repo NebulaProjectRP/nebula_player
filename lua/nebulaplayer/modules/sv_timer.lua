@@ -36,7 +36,7 @@ function meta:initPlayTime(data)
             self.playTime.week = 0
         end
 
-        MsgC(Color(100, 255, 200),"[Player]", color_white, " Loaded playtime data for " .. self:Nick() .. ":" .. self:SteamID64() .. "\n")
+        MsgC(Color(100, 255, 200),"[Nebula]", color_white, " Loaded playtime data for " .. self:Nick() .. ":" .. self:SteamID64() .. "\n")
     else
         self.playTime = {
             time = 0,
