@@ -341,7 +341,7 @@ concommand.Add("neb_addcredits", function(ply, cmd, args)
         NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
             if data and data[1] then
                 NebulaDriver:MySQLUpdate("premium", {
-                    credits = total
+                    credits = "credits + " .. amount
                 }, "steamid = " .. target, function()
                     MsgN("[Nebula] [Existing Player] " .. target .. " has been given " .. amount .. " credits. New balance: " .. tonumber(data[1].credits) + amount)
                 end)
