@@ -54,7 +54,9 @@ net.Receive("NebulaRP.Credits:RequestLogs", function()
     end
 
     local target = net.ReadString()
+
     NebulaPremium[target] = {}
+
     while (net.ReadBool()) do
         table.insert(NebulaPremium[target], {
             date = net.ReadUInt(32),

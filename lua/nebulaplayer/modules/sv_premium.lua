@@ -117,16 +117,19 @@ function meta:addCredits(x, source, ignore)
     })
 
     if ignore then return true end
+
     net.Start("NebulaRP.Credits:Sync")
     net.WriteBool(false)
     net.WriteUInt(math.max(self.storeData.credits, 0), 32)
     net.Send(self)
+
     self._lockedTransaction = true
 
     NebulaDriver:MySQLUpdate("premium", {
         credits = self.storeData.credits
     }, "steamid = " .. self:SteamID64(), function()
         if IsValid(self) then self._lockedTransaction = nil end
+        MsgN("[Nebula] [Online Player] " .. self:SteamID64() .. " has been given " .. x .. " credits. New balance: " .. self.storeData.credits)
     end)
 
     return true
@@ -292,6 +295,7 @@ concommand.Add("neb_addrank", function(ply, cmd, args)
 
     if IsValid(player.GetBySteamID64(target)) then
         player.GetBySteamID64(target):giveRank(rank)
+        DarkRP.notify(player.GetBySteamID64(target), 0, 4, "You have been given the " .. rank .. " rank!")
     else
         NebulaDriver:MySQLQuery("SELECT titles FROM premium WHERE steamid = " .. target, function(data)
             if data and data[1] then
@@ -324,25 +328,34 @@ concommand.Add("neb_addcredits", function(ply, cmd, args)
     if IsValid(ply) then return end
 
     local target = args[1]
-    local amount = args[2]
+    local amount = tonumber(args[2])
+
+    if not amount then return end
 
     if IsValid(player.GetBySteamID64(target)) then
-        player.GetBySteamID64(target):addCredits(tonumber(amount), "Console/RCON/Donation")
+        player.GetBySteamID64(target):addCredits(amount, "Console/RCON/Donation")
         DarkRP.notify(player.GetBySteamID64(target), 0, 4, "You have been given " .. amount .. " credits!")
     else
-        NebulaDriver:MySQLUpdate("premium", {
-            credits = "credits + " .. tonumber(amount)
-        }, "steamid = " .. target, function()
-            NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
-                if data and data[1] then
-                    MsgN("[Nebula] " .. target .. " has been given " .. amount .. " credits. New balance: " .. data[1].credits)
+        NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
+            if data and data[1] then
+                local total = tonumber(data[1].credits) + amount
 
-                    NebulaPremium[target] = {
-                        Credits = data[1].credits,
-                        Logs = {}
-                    }
-                end
-            end)
+                NebulaDriver:MySQLUpdate("premium", {
+                    credits = total
+                }, "steamid = " .. target, function()
+                    MsgN("[Nebula] [Existing Player] " .. target .. " has been given " .. amount .. " credits. New balance: " .. total)
+                end)
+            else
+                NebulaDriver:MySQLInsert("premium", {
+                    steamid = target,
+                    credits = amount,
+                    titles = "[]",
+                    bag = "[]",
+                    config = "[]",
+                }, function()
+                    MsgN("[Nebula] [Unknown Player] " .. target .. " has been given " .. amount .. " credits. New balance: " .. amount)
+                end)
+            end
         end)
     end
 end)
