@@ -31,19 +31,20 @@ if CLIENT then
 
     function string.NicePlayTime()
         local time = LocalPlayer():getPlayTime()
-        local format = os.date("!*t", time)
         local str = ""
-        if (format.yday > 0) then
-            str = str .. string.format("%d day%s, ", format.yday, format.yday > 1 and "s" or "")
+        local days = math.floor(time / 86400)
+        local hours = math.floor(time / 3600) % 24
+        local minutes = math.floor(time / 60) % 60
+
+        if (days > 0) then
+            str = str .. string.format("%d day%s, ", days, days > 1 and "s" or "")
         end
 
-        if (format.hour > 0) then
-            str = str .. string.format("%d hour%s, ", format.hour, format.hour > 1 and "s" or "")
+        if (hours > 0) then
+            str = str .. string.format("%d hour%s, ", hours, hours > 1 and "s" or "")
         end
 
-        if (format.min > 0) then
-            str = str .. string.format("%d minute%s", format.min, format.min > 1 and "s" or "")
-        end
+        str = str .. string.format("%d minute%s", minutes, minutes > 1 and "s" or "")
 
         return str
     end
