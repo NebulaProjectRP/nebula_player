@@ -70,6 +70,8 @@ function meta:syncCredits()
 end
 
 function meta:addCredits(x, source, ignore)
+    print(x .. "creeeedits")
+
     if not source then
         ErrorNoHalt("source #2 parameter not found, wanna gonna do about that!")
 
@@ -338,12 +340,10 @@ concommand.Add("neb_addcredits", function(ply, cmd, args)
     else
         NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
             if data and data[1] then
-                local total = tonumber(data[1].credits) + amount
-
                 NebulaDriver:MySQLUpdate("premium", {
                     credits = total
                 }, "steamid = " .. target, function()
-                    MsgN("[Nebula] [Existing Player] " .. target .. " has been given " .. amount .. " credits. New balance: " .. total)
+                    MsgN("[Nebula] [Existing Player] " .. target .. " has been given " .. amount .. " credits. New balance: " .. tonumber(data[1].credits) + amount)
                 end)
             else
                 NebulaDriver:MySQLInsert("premium", {
