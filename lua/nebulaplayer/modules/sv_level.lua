@@ -27,7 +27,7 @@ hook.Add("DatabaseCreateTables", "Nebula.LevelSystem", function(fun)
                 steamid = ply:SteamID64()
             })
         else
-            MsgC(Color(100, 255, 200), "[Player]", color_white, " Loaded level data for " .. ply:Nick() .. ":" .. ply:SteamID64() .. "\n")
+            MsgC(Color(100, 255, 200), "[Nebula]", color_white, " Loaded level data for " .. ply:Nick() .. ":" .. ply:SteamID64() .. "\n")
         end
     end)
 end)
