@@ -124,9 +124,7 @@ function meta:addCredits(x, source, ignore)
     NebulaDriver:MySQLUpdate("premium", {
         credits = self.storeData.credits
     }, "steamid = " .. self:SteamID64(), function()
-        if IsValid(self) then
-            self._lockedTransaction = nil
-        end
+        if IsValid(self) then self._lockedTransaction = nil end
     end)
 
     return true
@@ -140,7 +138,7 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
         activetitle = "VARCHAR(32) DEFAULT 'user'",
         bag = "TEXT NOT NULL",
         config = "TEXT NOT NULL",
-        joinDate = "INT(32) NOT NULL"
+        joinDate = "INT(32) NOT NULL DEFAULT 0",
     }, "steamid")
 
     NebulaDriver:MySQLCreateTable("credit_logs", {
@@ -154,12 +152,14 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
 
     NebulaDriver:MySQLHook("premium", function(pl, data)
         if not data then
+            local time = os.time()
+
             NebulaDriver:MySQLInsert("premium", {
                 steamid = pl:SteamID64(),
                 titles = "[]",
                 bag = "[]",
                 config = "[]",
-                joinDate = os.time()
+                joinDate = time
             })
 
             data = {
@@ -167,9 +167,17 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
                 titles = {},
                 bag = {},
                 config = {},
-                joinDate = os.time()
+                joinDate = time
             }
         else
+            if data.joinDate == 0 then
+                NebulaDriver:MySQLUpdate("premium", {
+                    steamid = pl:SteamID64(),
+                }, "steamid = " .. pl:SteamID64(), function()
+                    data.joinDate = os.time()
+                end)
+            end
+
             data.titles = util.JSONToTable(data.titles)
             data.bag = util.JSONToTable(data.bag)
             data.config = util.JSONToTable(data.config)
@@ -197,59 +205,6 @@ function meta:giveRank(rank)
     end
 end
 
-concommand.Add("neb_addrank", function(ply, cmd, args)
-    if IsValid(ply) then return end
-
-    local target = args[1]
-    local rank = args[2]
-
-    if IsValid(player.GetBySteamID64(target)) then
-        player.GetBySteamID64(target):giveRank(rank)
-    else
-        NebulaDriver:MySQLQuery("SELECT titles FROM premium WHERE steamid = " .. target, function(data)
-            if data and data[1] then
-                local titles = util.JSONToTable(data[1].titles)
-
-                table.insert(titles, rank)
-
-                NebulaDriver:MySQLUpdate("premium", {
-                    titles = util.TableToJSON(titles),
-                    activetitle = rank
-                }, "steamid = " .. target, function()
-                    MsgN("[NebulaRP] " .. target .. " has been given " .. rank .. " rank.")
-                end)
-            end
-        end)
-    end
-end)
-
-concommand.Add("neb_addcredits", function(ply, cmd, args)
-    if IsValid(ply) then return end
-
-    local target = args[1]
-    local amount = args[2]
-
-    if IsValid(player.GetBySteamID64(target)) then
-        player.GetBySteamID64(target):addCredits(tonumber(amount), "Console/RCON/Donation")
-        DarkRP.notify(player.GetBySteamID64(target), 0, 4, "You have been given " .. amount .. " credits!")
-    else
-        NebulaDriver:MySQLUpdate("premium", {
-            credits = "credits + " .. tonumber(amount)
-        }, "steamid = " .. target, function()
-            NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
-                if data and data[1] then
-                    MsgN("[NebulaRP] " .. target .. " has been given " .. amount .. " credits. New balance: " .. data[1].credits)
-
-                    NebulaCredits[target] = {
-                        Credits = data[1].credits,
-                        Logs = {}
-                    }
-                end
-            end)
-        end)
-    end
-end)
-
 function meta:addBattlepass(id)
     if not self.storeData.bag then
         self.storeData.bag = {}
@@ -268,35 +223,6 @@ function meta:addBattlepass(id)
     net.WriteUInt(self.storeData.bag[id].claimed, 32)
     net.Send(self)
 end
-
-concommand.Add("neb_givebp", function(ply, cmd, args)
-    if IsValid(ply) then return end
-
-    local target = args[1]
-    local bp = args[2]
-
-    if IsValid(player.GetBySteamID64(target)) then
-        player.GetBySteamID64(target):addBattlepass(bp)
-    else
-        NebulaDriver:MySQLQuery("SELECT bag FROM premium WHERE steamid = " .. target, function(data)
-            if data and data[1] then
-                local bag = util.JSONToTable(data[1].bag)
-
-                bag[bp] = {
-                    level = 0,
-                    premium = true,
-                    claimed = 0
-                }
-
-                NebulaDriver:MySQLUpdate("premium", {
-                    bag = util.TableToJSON(bag)
-                }, "steamid = " .. target, function()
-                    MsgN("[NebulaRP] " .. target .. " has been given " .. bp .. " battlepass.")
-                end)
-            end
-        end)
-    end
-end)
 
 net.Receive("NebulaRP.Credits:Transfer", function(l, pl)
     local result = pl:transferCredits(net.ReadEntity(), net.ReadUInt(32))
@@ -350,5 +276,99 @@ net.Receive("NebulaRP.Credits:ChangeTitle", function(l, ply)
         NebulaDriver:MySQLUpdate("premium", {
             activetitle = title
         }, "steamid = " .. ply:SteamID64())
+    end
+end)
+
+-- Concommands
+
+concommand.Add("neb_addrank", function(ply, cmd, args)
+    if IsValid(ply) then return end
+
+    local target = args[1]
+    local rank = args[2]
+
+    if IsValid(player.GetBySteamID64(target)) then
+        player.GetBySteamID64(target):giveRank(rank)
+    else
+        NebulaDriver:MySQLQuery("SELECT titles FROM premium WHERE steamid = " .. target, function(data)
+            if data and data[1] then
+                local titles = util.JSONToTable(data[1].titles)
+
+                table.insert(titles, rank)
+
+                NebulaDriver:MySQLUpdate("premium", {
+                    titles = util.TableToJSON(titles),
+                    activetitle = rank
+                }, "steamid = " .. target, function()
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. rank .. " rank.")
+                end)
+            else
+                NebulaDriver:MySQLInsert("premium", {
+                    steamid = target,
+                    titles = util.TableToJSON({rank}),
+                    activetitle = rank,
+                    bag = "[]",
+                    config = "[]",
+                }, function()
+                    MsgN("[NebulaRP] UNKNOWN PLAYER " .. target .. " has been given " .. rank .. " rank.")
+                end)
+            end
+        end)
+    end
+end)
+
+concommand.Add("neb_addcredits", function(ply, cmd, args)
+    if IsValid(ply) then return end
+
+    local target = args[1]
+    local amount = args[2]
+
+    if IsValid(player.GetBySteamID64(target)) then
+        player.GetBySteamID64(target):addCredits(tonumber(amount), "Console/RCON/Donation")
+        DarkRP.notify(player.GetBySteamID64(target), 0, 4, "You have been given " .. amount .. " credits!")
+    else
+        NebulaDriver:MySQLUpdate("premium", {
+            credits = "credits + " .. tonumber(amount)
+        }, "steamid = " .. target, function()
+            NebulaDriver:MySQLQuery("SELECT credits FROM premium WHERE steamid = " .. target, function(data)
+                if data and data[1] then
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. amount .. " credits. New balance: " .. data[1].credits)
+
+                    NebulaCredits[target] = {
+                        Credits = data[1].credits,
+                        Logs = {}
+                    }
+                end
+            end)
+        end)
+    end
+end)
+
+concommand.Add("neb_givebp", function(ply, cmd, args)
+    if IsValid(ply) then return end
+
+    local target = args[1]
+    local bp = args[2]
+
+    if IsValid(player.GetBySteamID64(target)) then
+        player.GetBySteamID64(target):addBattlepass(bp)
+    else
+        NebulaDriver:MySQLQuery("SELECT bag FROM premium WHERE steamid = " .. target, function(data)
+            if data and data[1] then
+                local bag = util.JSONToTable(data[1].bag)
+
+                bag[bp] = {
+                    level = 0,
+                    premium = true,
+                    claimed = 0
+                }
+
+                NebulaDriver:MySQLUpdate("premium", {
+                    bag = util.TableToJSON(bag)
+                }, "steamid = " .. target, function()
+                    MsgN("[NebulaRP] " .. target .. " has been given " .. bp .. " battlepass.")
+                end)
+            end
+        end)
     end
 end)
