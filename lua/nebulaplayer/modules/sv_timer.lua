@@ -10,7 +10,7 @@ function meta:savePlayTime()
     self.startTime = CurTime()
 
     if (deltaRecord > self.playTime.record) then
-        self.playTime.record = delta
+        self.playTime.record = deltaRecord
     end
     NebulaDriver:MySQLUpdate("playtime", {
         time = self.playTime.time,
