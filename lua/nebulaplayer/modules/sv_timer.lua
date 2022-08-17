@@ -25,6 +25,7 @@ function meta:initPlayTime(data)
         record = 0,
         lastWeek = 0
     }
+
     self.startTime = CurTime()
 
     if data and data.time then

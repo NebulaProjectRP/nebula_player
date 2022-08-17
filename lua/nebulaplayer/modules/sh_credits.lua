@@ -1,4 +1,4 @@
-NebulaCredits = {}
+NebulaPremium = {}
 
 local meta = FindMetaTable("Player")
 
@@ -54,13 +54,13 @@ net.Receive("NebulaRP.Credits:RequestLogs", function()
     end
 
     local target = net.ReadString()
-    NebulaCredits[target] = {}
+    NebulaPremium[target] = {}
     while (net.ReadBool()) do
-        table.insert(NebulaCredits[target], {
+        table.insert(NebulaPremium[target], {
             date = net.ReadUInt(32),
             source = net.ReadString(),
             amount = net.ReadUInt(32)
         })
     end
-    MsgN("Readed ", table.Count(NebulaCredits[target]), " entries")
+    MsgN("Readed ", table.Count(NebulaPremium[target]), " entries")
 end)
