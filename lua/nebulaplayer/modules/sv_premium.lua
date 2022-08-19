@@ -7,8 +7,6 @@ util.AddNetworkString("NebulaRP.Credits:SendBP")
 NebulaPremium = NebulaPremium or {}
 
 function NebulaPremium:CreateLog(receiver, sender, amount, source)
-    if not tonumber(amount) then return end
-
     NebulaDriver:MySQLInsert("premium_logs", {
         receiver = receiver,
         sender = sender,
