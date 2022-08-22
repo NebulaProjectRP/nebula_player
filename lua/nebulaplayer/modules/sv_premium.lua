@@ -362,7 +362,9 @@ concommand.Add("neb_addcredits", function(ply, cmd, args)
         end)
     end
 end)
--- NOT NEEDED
+
+-- NOT NEEDED RN
+
 -- concommand.Add("neb_givebp", function(ply, cmd, args)
 --     if IsValid(ply) then return end
 --     local target = args[1]
