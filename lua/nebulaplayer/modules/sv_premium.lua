@@ -12,7 +12,7 @@ function NebulaPremium:CreateLog(receiver, sender, amount, source)
         sender = sender,
         source = source,
         credits = tonumber(amount),
-        date = os.time()
+        time = os.time()
     })
 end
 
