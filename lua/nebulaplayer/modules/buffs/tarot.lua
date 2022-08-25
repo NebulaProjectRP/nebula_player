@@ -36,7 +36,7 @@ function buff:OnRemove(ply)
 end
 NebulaBuffs:Register("strength", buff)
 
-hook.Add("EntityFireBullets", "Tarot", function(wep, data)
+hook.Add("EntityFireBullets", "TarotBullets", function(wep, data)
     local attacker = data.Attacker
     if !IsValid(attacker) or !attacker:IsPlayer() then return end
 
