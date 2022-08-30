@@ -17,7 +17,6 @@ function buff:OnCreate(ply)
     if SERVER then
         ply.fireLooperDamage = ply:LoopTimer("FireTimerDamage", .5, function()
             if (not ply:Alive()) then
-                MsgN("Going back")
                 ply:Extinguish()
 
                 return

@@ -41,5 +41,6 @@ NebulaRanks.Ranks["kat"] = {
 }
 
 function NebulaRanks:GetField(ply, field)
+    local rank = ply:getTitle()
     return (self.Ranks[rank] and self.Ranks[rank] or self.Ranks["default"])[field]
 end
