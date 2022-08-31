@@ -29,23 +29,23 @@ if CLIENT then
         }
     end)
 
-    function string.NicePlayTime()
-        local time = LocalPlayer():getPlayTime()
+    function string.NicePlayTime(number)
+        local time = number or LocalPlayer():getPlayTime()
         local str = ""
         local days = math.floor(time / 86400)
         local hours = math.floor(time / 3600) % 24
         local minutes = math.floor(time / 60) % 60
 
         if (days > 0) then
-            str = str .. string.format("%d day%s, ", days, days > 1 and "s" or "")
+            str = str .. string.format("%dd ", days)
         end
 
         if (hours > 0) then
-            str = str .. string.format("%d hour%s, ", hours, hours > 1 and "s" or "")
+            str = str .. string.format("%dh ", hours)
         end
 
-        str = str .. string.format("%d minute%s", minutes, minutes > 1 and "s" or "")
+        str = str .. string.format("%dm ", minutes)
 
-        return str
+    return str
     end
 end
