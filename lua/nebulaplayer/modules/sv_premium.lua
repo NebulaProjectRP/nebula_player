@@ -2,6 +2,7 @@ util.AddNetworkString("NebulaRP.Credits:Sync")
 util.AddNetworkString("NebulaRP.Credits:Transfer")
 util.AddNetworkString("NebulaRP.Credits:RequestLogs")
 util.AddNetworkString("NebulaRP.Credits:ChangeTitle")
+util.AddNetworkString("NebulaRP.Credits:ChangeCosmeticTitle")
 util.AddNetworkString("NebulaRP.Credits:SendBP")
 
 NebulaPremium = NebulaPremium or {}
@@ -61,6 +62,24 @@ function meta:transferCredits(target, amount)
     NebulaPremium:CreateLog(target:SteamID64(), self:SteamID64(), amount, "Player Transfer")
 
     return true
+end
+
+function meta:setCosmeticTitle(text, animation, style)
+    animation = animation or "default"
+
+    self.storeData.bag.head = {
+        text = text,
+        animation = animation,
+        style = style
+    }
+
+    self:SetNWString("HeadAnim", animation)
+    self:SetNWString("HeadText", text)
+    self:SetNWString("HeadStyle", style)
+
+    NebulaDriver:MySQLUpdate("premium", {
+        bag = util.TableToJSON(self.storeData.bag)
+    }, "steamid = " .. self:SteamID64())
 end
 
 function meta:syncCredits()
@@ -200,6 +219,11 @@ hook.Add("DatabaseInitialized", "NebulaRP.Store", function()
 
         pl.storeData = data
         pl:SetNWString("Title", data.activetitle)
+        if (data.bag.head) then
+            pl:SetNWString("HeadAnim", data.bag.head.animation)
+            pl:SetNWString("HeadText", data.bag.head.text)
+            pl:SetNWString("HeadStyle", data.bag.head.style)
+        end
         pl:syncCredits()
     end)
 end)
@@ -284,12 +308,72 @@ net.Receive("NebulaRP.Credits:ChangeTitle", function(l, ply)
     if (ply.lastTitleChange or 0) > CurTime() then return end
     ply.lastTitleChange = CurTime() + 2
 
-    if title == ply:getTitle() or not ply:getTitles()[title] then
+    if title == ply:getTitle() or not table.HasValue(ply:getTitles(), title) then
         ply:SetNWString("Title", title)
 
         NebulaDriver:MySQLUpdate("premium", {
             activetitle = title
         }, "steamid = " .. ply:SteamID64())
+    end
+end)
+
+local blacklisted = {
+    mod = true,
+    ["m0d"] = true,
+    owner = true,
+    admin = true,
+    vip = true,
+
+}
+
+net.Receive("NebulaRP.Credits:ChangeCosmeticTitle", function(l, ply)
+    local text = net.ReadString()
+    local animation = net.ReadString()
+    local style = net.ReadString()
+
+    text = string.Replace(text, "'", "")
+    text = string.Replace(text, '"', '')
+
+    if (#text > 24) then
+        MsgN("Message too long")
+        return
+    end
+
+    if not NebulaPremium.TextDecorators[animation] then
+        MsgN("No animation")
+        return
+    end
+
+    if not NebulaPremium.TextStyles[style] then
+        style = "default"
+    end
+
+    for k, v in pairs(blacklisted) do
+        if (string.find(text, k)) then
+            net.Start("NebulaRP.Credits:ChangeCosmeticTitle")
+            net.WriteBool(false)
+            net.WriteUInt(0, 2)
+            net.Send(ply)
+            MsgN("Blacklisted")
+            return
+        end
+    end
+
+    local oldtext, oldanim, oldStyle = ply:GetNWString("HeadText"), ply:GetNWString("HeadAnim"), ply:GetNWString("HeadStyle")
+    //MsgN(oldtext," ", text," ", animation," ", oldanim, " ", style, " ", oldStyle)
+    local price = (oldtext != text and 250 or 0) + (oldanim != animation and NebulaPremium.TextDecorators[animation].price or 0) + (oldStyle != style and 250 or 0) 
+    MsgN(price)
+    if (ply:getCredits() < price) then
+        net.Start("NebulaRP.Credits:ChangeCosmeticTitle")
+        net.WriteBool(false)
+        net.WriteUInt(1, 2)
+        net.Send(ply)
+        MsgN("Can't afford")
+        return
+    end
+    if price > 0 then
+        ply:addCredits(-price, "Buying Title")
+        ply:setCosmeticTitle(text, animation, style)
     end
 end)
 
