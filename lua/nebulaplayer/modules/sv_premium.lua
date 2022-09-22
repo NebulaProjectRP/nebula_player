@@ -360,9 +360,7 @@ net.Receive("NebulaRP.Credits:ChangeCosmeticTitle", function(l, ply)
     end
 
     local oldtext, oldanim, oldStyle = ply:GetNWString("HeadText"), ply:GetNWString("HeadAnim"), ply:GetNWString("HeadStyle")
-    //MsgN(oldtext," ", text," ", animation," ", oldanim, " ", style, " ", oldStyle)
-    local price = (oldtext != text and 250 or 0) + (oldanim != animation and NebulaPremium.TextDecorators[animation].price or 0) + (oldStyle != style and 250 or 0) 
-    MsgN(price)
+    local price = (oldtext != text and 250 or 0) + (oldanim != animation and NebulaPremium.TextDecorators[animation].price or 0) + (oldStyle != style and 250 or 0)
     if (ply:getCredits() < price) then
         net.Start("NebulaRP.Credits:ChangeCosmeticTitle")
         net.WriteBool(false)
