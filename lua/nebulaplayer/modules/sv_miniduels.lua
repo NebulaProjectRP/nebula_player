@@ -101,6 +101,9 @@ hook.Add("PlayerDisconnected", "NebulaDuesl.SolveMini", function(ply)
 end)
 
 hook.Add("DoPlayerDeath", "NebulaDuels.MiniDuel", function(ply, att, dmg)
+    if not IsValid(att) then
+        att = ply
+    end
     if att == ply or (ply.miniDuel and ply.miniDuel == att) then
         if (att == ply) then
             att = ply.miniDuel
@@ -110,6 +113,7 @@ hook.Add("DoPlayerDeath", "NebulaDuels.MiniDuel", function(ply, att, dmg)
             DarkRP.notify(att, 0, 4, "You've killed your duel enemy.")
             DarkRP.notify(ply, 1, 4, "You lost the duel!")
         end
+
         ply.miniDuel = nil
         att.miniDuel = nil
         ply:SetNW2String("IsDueling", false)
