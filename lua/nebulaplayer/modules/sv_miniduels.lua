@@ -143,6 +143,7 @@ hook.Add("DoPlayerDeath", "NebulaDuels.MiniDuel", function(ply, att, dmg)
 end)
 
 hook.Add("PlayerShouldTakeDamage", "NebulaMiniDuels", function(ply, att)
+    if (not att:IsPlayer()) then return end
     local wep = att:GetActiveWeapon()
     if (ply:IsDueling() or ply:InArena()) then return end
     if (att:IsDueling() or att:InArena()) then return end
