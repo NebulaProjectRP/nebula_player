@@ -33,7 +33,7 @@ function meta:addEternalStat(id, val)
     local tag = self:UniqueID() .. "_eternals"
     timer.Create(tag, 5, 1, function()
         if (hadEternal) then
-            NebulaDriver:MySQLUpdate("nebula_eternals", {progress = self._eternals[id].progress, level = self._eternals[id].level}, {steamid = self:SteamID64(), id = id})
+            NebulaDriver:MySQLUpdate("nebula_eternals", {progress = self._eternals[id].progress, level = self._eternals[id].level}, "steamid = " .. self:SteamID64() " and id = " .. id)
         else
             NebulaDriver:MySQLInsert("nebula_eternals", {steamid = self:SteamID64(), id = id, progress = self._eternals[id].progress, level = self._eternals[id].level})
         end
@@ -89,9 +89,9 @@ hook.Add("DatabaseInitialized", "NebulaEternals.AddDB", function()
         level = "INT DEFAULT 0",
     }, "steamid, id")
 
-    NebulaDriver:MySQLHook("eternals", "steamid", function(ply, data)
+    NebulaDriver:MySQLHook("eternals", function(ply, data)
         ply._eternalsData = {}
-        for k, v in pairs(data) do
+        for k, v in pairs(data or {}) do
             ply._eternalsData[v.id] = {
                 progress = v.progress,
                 level = v.level,

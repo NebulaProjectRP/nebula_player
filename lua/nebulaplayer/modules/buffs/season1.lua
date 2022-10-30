@@ -105,6 +105,12 @@ end
 
 NebulaBuffs:Register("conffeti", buff)
 
+buff = {
+    Name = "Healing Defficiency"
+}
+
+NebulaBuffs:Register("healing", buff)
+
 hook.Add("ScalePlayerDamage", "NebulaBuffs.OnFireMadness", function(ply, hit, dmg)
     if (ply:IsFlagSet(FL_ONFIRE) and dmg:IsBulletDamage()) then
         dmg:ScaleDamage(1.25)
